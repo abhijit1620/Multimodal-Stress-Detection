@@ -1,0 +1,75 @@
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environments
+.venv/
+env/
+venv/
+
+# OS files
+.DS_Store
+
+# Artifacts / Models
+artifacts/
+*.pth
+*.onnx
+*.npy
+*.npz
+*.h5
+
+# Large files
+*.zip
+*.tar
+*.tar.gz
+*.mp4
+*.mov
+*.avi
+large_files/
+
+# Python build
+build/
+dist/
+*.egg-info/
+
+# Notebooks
+.ipynb_checkpoints/
+
+# Logs and temp
+*.log
+logs/
+*.tmp
+*.swp
+*.bak
+
+# Cache
+.cache/
+*.egg
+*.eggs/
+*.pkl
+*.joblib
+
+# IDE configs
+.vscode/
+.idea/
+
+# Streamlit
+.streamlit/
+
+# Data
+data/
+datasets/
+*.csv
+*.tsv
+*.json
+
+# Model outputs
+checkpoints/
+outputs/
+results/
+runs/
+
+# Environment configs
+.env
