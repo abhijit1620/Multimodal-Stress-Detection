@@ -7,10 +7,11 @@ class FusionNet(nn.Module):
         super().__init__()
         # TODO: Replace with real encoders later
         self.face = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(3*224*224, 512),   # dummy face encoder -> 512 features
-            nn.ReLU()
-        )
+        nn.Flatten(),
+        nn.Linear(3*224*224, 512),   # 🔥 Update for 224×224
+        nn.ReLU(),
+        nn.Dropout(0.3)
+        )          
         self.audio = nn.Sequential(
             nn.Flatten(),
             nn.Linear(1*128*128, 128),   # dummy audio encoder -> 128 features

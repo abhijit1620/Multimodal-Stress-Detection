@@ -8,16 +8,16 @@ class Paths:
 
 @dataclass
 class HyperParams:
-    lr: float = 1e-3
-    batch_size: int = 8
-    epochs: int = 1
-    num_classes: int = 3  # Low, Medium, High
+    lr: float = 1e-3          # learning rate (stable)
+    batch_size: int = 16      # thoda bada karo (GPU hai to 32 bhi try kar)
+    epochs: int = 30          # kam se kam 20–50 epochs for convergence
+    num_classes: int = 3      # Low, Medium, High
 
 @dataclass
 class Config:
     paths: Paths = Paths()
     hparams: HyperParams = HyperParams()
-    dataset: str = "wesad"   # options:  "wesad", "deap"
+    dataset: str = "deap"   # options:  "wesad", "deap"
 
 # global config object
 CFG = Config()

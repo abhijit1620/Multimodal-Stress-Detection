@@ -58,12 +58,13 @@ logs/
 # Streamlit
 .streamlit/
 
-# Data
+# Data (ignore raw datasets, but not source code)
 data/
 datasets/
 *.csv
 *.tsv
 *.json
+!src/data/*.py
 
 # Model outputs
 checkpoints/

@@ -16,3 +16,4 @@ scikit-learn
 seaborn
 transformers
 Pillow
+seaborn
