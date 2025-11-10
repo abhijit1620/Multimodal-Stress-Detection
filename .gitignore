@@ -1,76 +1,30 @@
-# Python cache
+# Python cache files
 __pycache__/
-*.pyc
-*.pyo
-*.pyd
+*.py[cod]
 
-# Virtual environments
+# Virtual environment
 .venv/
 env/
 venv/
 
-# OS files
-.DS_Store
-
-# Artifacts / Models
-artifacts/
+# PyTorch / ML artifacts
 *.pth
-*.onnx
+*.pt
 *.npy
-*.npz
-*.h5
+*.onnx
 
-# Large files
-*.zip
-*.tar
-*.tar.gz
-*.mp4
-*.mov
-*.avi
-large_files/
-
-# Python build
-build/
-dist/
-*.egg-info/
-
-# Notebooks
-.ipynb_checkpoints/
-
-# Logs and temp
+# Streamlit / app specific
 *.log
-logs/
-*.tmp
-*.swp
-*.bak
+*.db
 
-# Cache
-.cache/
-*.egg
-*.eggs/
-*.pkl
-*.joblib
+# Data (agar sensitive ya large files hain)
+data/wesad_processed/
+data/deap/data_preprocessed_python/
+data/audio_stimuli_MIDI/
+data/audio_stimuli_MIDI_tempo24/
 
-# IDE configs
+# IDE / OS specific
 .vscode/
-.idea/
-
-# Streamlit
-.streamlit/
-
-# Data (ignore raw datasets, but not source code)
-data/
-datasets/
-*.csv
-*.tsv
-*.json
-!src/data/*.py
-
-# Model outputs
-checkpoints/
-outputs/
-results/
-runs/
-
-# Environment configs
-.env
+.DS_Store
+*.swp
+*.swo

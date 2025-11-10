@@ -1,91 +1,72 @@
 import torch
+from torch import nn, optim
 from torch.utils.data import DataLoader
-import torch.nn as nn, torch.optim as optim
 from tqdm import tqdm
-import os
 
-# 🔹 absolute imports
-from src.config import CFG
-from src.models.fusion import FusionNet
 from src.data.wesad_loader import WESADDataset
 from src.data.deap_loader import DEAPDataset
+from src.data.combined_dataset import CombinedDataset
+from src.models.fusion import FusionModel
+from pathlib import Path
 
 
-def device():
-    return torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+def preprocess_sensors(x):
+    """
+    Ensures x → [B, 8, T] for model input.
+    - WESAD chest: already 8 channels
+    - DEAP: 32 EEG channels → take first 8
+    - If [B, T, C] → permute → [B, C, T]
+    """
+    # [B, T, C] → [B, C, T]
+    if x.ndim == 3 and x.shape[2] > x.shape[1]:
+        x = x.permute(0, 2, 1)
+
+    # If 32 EEG channels → take first 8
+    if x.shape[1] > 8:
+        x = x[:, :8, :]
+
+    return x
 
 
 def main():
-    dev = device()
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print("🚀 Loading Datasets...")
 
-    # Sensor input channels depend on dataset (wesad=6, deap=32)
-    in_channels = 6
-    if getattr(CFG, "dataset", None) == "deap":
-        in_channels = 32
+    wesad = WESADDataset(data_dir="data/WESAD", sensor="chest", preload=True)
+    deap = DEAPDataset(data_dir="data/DEAP", preload=True)
 
-    model = FusionNet(
-        num_classes=CFG.hparams.num_classes,
-        sensor_in_channels=in_channels
-    ).to(dev)
+    dataset = CombinedDataset([wesad, deap])
+    dataloader = DataLoader(dataset, batch_size=4, shuffle=True)
 
-    # --------------------------
-    # Select Dataset
-    # --------------------------
-    if getattr(CFG, "dataset", None) == "wesad":
-        ds = WESADDataset()
-    elif getattr(CFG, "dataset", None) == "deap":
-        ds = DEAPDataset()
-    else:
-        raise ValueError(f"Unknown dataset: {getattr(CFG, 'dataset', None)}")
+    print(f"✅ Total samples for training: {len(dataset)}")
 
-    dl = DataLoader(ds, batch_size=CFG.hparams.batch_size, shuffle=True)
+    model = FusionModel(num_classes=2).to(device)
+    optimizer = optim.Adam(model.parameters(), lr=1e-4)
+    loss_fn = nn.CrossEntropyLoss()
 
-    # --------------------------
-    # Training loop
-    # --------------------------
-    crit = nn.CrossEntropyLoss()
-    opt = optim.AdamW(model.parameters(), lr=CFG.hparams.lr)
-    model.train()
+    EPOCHS = 3
 
-    for ep in range(CFG.hparams.epochs):
-        pbar = tqdm(dl, desc=f"Epoch {ep+1}/{CFG.hparams.epochs}")
-        for x, y in pbar:
-            x, y = x.to(dev), y.to(dev)
+    for epoch in range(1, EPOCHS + 1):
+        pbar = tqdm(dataloader, desc=f"Epoch {epoch}/{EPOCHS}")
 
-            # ✅ Fix sensor shape
-            if x.dim() == 3:
-                if x.shape[2] == in_channels:     # [B, T, C] → transpose
-                    x = x.transpose(1, 2)        # -> [B, C, T]
-                elif x.shape[1] == in_channels:  # already [B, C, T]
-                    pass
-                else:
-                    raise ValueError(
-                        f"Unexpected sensor shape {x.shape}, expected channel={in_channels}"
-                    )
+        for sensors, label in pbar:
+            sensors = preprocess_sensors(sensors).to(device)
+            label = label.to(device)
 
-            # Dummy face + audio until real preprocessing is ready
-            logits = model(
-                torch.zeros((x.size(0), 3, 224, 224), device=dev),   # fake face
-                torch.zeros((x.size(0), 1, 128, 128), device=dev),   # fake audio
-                x                                                    # real sensors
-            )
+            optimizer.zero_grad()
+            logits = model(sensors=sensors, face=None, audio=None)
 
-            # --------------------------
-            # Loss + Backprop
-            # --------------------------
-            loss = crit(logits, y)
-            opt.zero_grad()
+            loss = loss_fn(logits, label)
             loss.backward()
-            opt.step()
+            optimizer.step()
 
-            pbar.set_postfix(loss=loss.item())
+            pbar.set_postfix({"loss": loss.item()})
 
-    print("✅ Training finished.")
-
-    # 🔹 Save trained model
-    os.makedirs("artifacts", exist_ok=True)
-    torch.save(model.state_dict(), "artifacts/fusion_model.pth")
-    print("💾 Model saved at artifacts/fusion_model.pth")
+    # ✅ Save trained fusion model
+    save_path = Path("artifacts/fusion_model.pth")
+    save_path.parent.mkdir(exist_ok=True, parents=True)
+    torch.save(model.state_dict(), save_path)
+    print(f"✅ Training Complete! Model saved at {save_path}")
 
 
 if __name__ == "__main__":
